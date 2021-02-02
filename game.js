@@ -8,7 +8,10 @@ let width = 400,
     gameArray = [],
     canvas,
     posClicked,
-    stateSelected = SELECT_ROWS;
+    stateSelected = SELECT_ROWS,
+    solutionNum = 1,
+    solutionLength = 5,
+    solution = [];
 
 class BytesGame {
     constructor() {
@@ -45,7 +48,7 @@ function setup() {
     var game = new BytesGame();
 
     drawGrid();
-    //drawChain2();
+    drawSolutionRow();
     fillGrid();
 
 
@@ -54,10 +57,13 @@ function setup() {
     document.addEventListener( 'contextmenu', event => event.preventDefault());
 }
 
+function isSolutionFull() {
+    return !( solution.length < solutionLength )
+}
 
 function getCell() {
-    let row = parseInt( mouseX / 50 );
-    let col = parseInt( mouseY / 50 );
+    let row = parseInt( mouseY / 50 );
+    let col = parseInt( mouseX / 50 );
 
     if( row > fieldRows - 1 ) {
         row = fieldRows - 1;
@@ -67,7 +73,7 @@ function getCell() {
         col = fieldCols - 1;
     }
 
-    return [row, col];
+    return [col, row];
 }
 
 function getByte() {
@@ -80,9 +86,9 @@ function drawGrid() {
     drawVLines( 10, 10, fieldRows, fieldCols );
 }
 
-function drawChain2() {
-    drawHLines( 500, 10, 1, 5 );
-    drawVLines( 500, 10, 1, 5 );
+function drawSolutionRow() {
+    drawHLines( 500, 10, solutionNum, solutionLength );
+    drawVLines( 500, 10, solutionNum, solutionLength );
 }
 
 function drawCell( row, col ) {
@@ -112,7 +118,7 @@ function drawRow() {
 function drawCol() {
     let pos = getCell();
 
-    for( var j = 0; j < fieldCols; j ++ ) {
+    for( var j = 0; j < fieldRows; j ++ ) {
         drawCell( pos[0], j );
     }
 }
@@ -125,7 +131,7 @@ function drawGame() {
     clear();
 
     drawGrid();
-    drawChain2();
+    drawSolutionRow();
 
     if( stateSelected == SELECT_ROWS ) {
         drawRow();
@@ -136,20 +142,37 @@ function drawGame() {
 }
 
 function mouseMoved() {
-    //drawGame();
+    drawGame();
 }
 
-function drawChain() {
+function fillSolution( solutionByte ) {
+    solution.push( solutionByte );
+}
 
+function drawSolutionArray() {
+    
+    var elems = document.querySelectorAll( '.solutionCell' );
+    
+    elems.forEach( function( elem ) { elem.remove();});
+
+    for( var i = 0; i < solution.length; i++ ) {
+        let text = createP( solution[i] );
+            
+        text.class( 'solutionCell' );
+        text.position( i * 50 + 515, 10 );
+    }
 }
 
 function mousePressed() {
     if( mouseButton === LEFT ) {
-        let pos = getCell();
-        posClicked = pos;
-
-
-        dbg( pos[0] + ', ' + pos[1] + ': ' + getByte() );
+        if( !isSolutionFull()) {
+            let pos = getCell();
+            posClicked = pos;
+            
+            fillSolution( getByte());
+            drawSolutionArray();
+            dbg( pos[0] + ', ' + pos[1] + ': ' + getByte() + ' == ' + solution );
+        }
     }
 
     if( mouseButton === RIGHT ) {
