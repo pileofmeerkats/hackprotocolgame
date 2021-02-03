@@ -32,6 +32,7 @@ class BytesGame {
 }
 
 function fillGrid() {
+    clearGrid();
     for( var i = 0; i < fieldCols; i++ ) {
         for( var j = 0; j < fieldRows; j++ ) {
             let text = createP( gameArray[i][j] );
@@ -41,6 +42,12 @@ function fillGrid() {
         }
     }
 };
+
+function clearGrid() {
+    var elems = document.querySelectorAll( '.cell' );
+
+    elems.forEach( function( elem ) { elem.remove(); });
+}
 
 function setup() {
     canvas = createCanvas( innerWidth - 50, innerHeight - 50 );
@@ -65,15 +72,26 @@ function getCell() {
     let row = parseInt( mouseY / 50 );
     let col = parseInt( mouseX / 50 );
 
-    if( row > fieldRows - 1 ) {
+    if( row > fieldRows - 1 ) 
+    {
         row = fieldRows - 1;
     }
 
-    if( col > fieldCols - 1 ) {
+    if( col > fieldCols - 1 ) 
+    {
         col = fieldCols - 1;
     }
 
     return [col, row];
+}
+
+function isClickInField() {
+    if(( mouseX > 0 && mouseX < fieldCols * 50 ) && ( mouseY > 0 && mouseY < fieldRows * 50 ))
+    {
+        return true;
+    }
+
+    return false;
 }
 
 function getByte() {
@@ -92,6 +110,8 @@ function drawSolutionRow() {
 }
 
 function drawCell( row, col ) {
+    //fill( 255, 255, 255 );
+    noFill();
     square( 10 + row * 50 + 3, 10 + col * 50 + 3, 44 );
 }
 
@@ -123,6 +143,16 @@ function drawCol() {
     }
 }
 
+function drawActiveCell() {
+    let pos = getCell();
+    
+    push();
+    noStroke();
+    fill( '#aaaaaa' );
+    square( 10 + pos[0] * 50 + 3, 10 + pos[1] * 50 + 3, 44 );
+    pop();
+}
+
 function dbg( text ) {
     select( '#debug' ).html(  '<p>' + text + '</p>' );
 }
@@ -132,6 +162,7 @@ function drawGame() {
 
     drawGrid();
     drawSolutionRow();
+    drawActiveCell();
 
     if( stateSelected == SELECT_ROWS ) {
         drawRow();
@@ -163,15 +194,34 @@ function drawSolutionArray() {
     }
 }
 
+function removeByteFromField( pos ) {
+    gameArray[pos[0]][pos[1]] = null;
+
+}
+
+function isByteExists( pos ) {
+    if( gameArray[pos[0]][pos[1]] != null )
+    {
+        return true;
+    }
+
+    return false;
+}
+
 function mousePressed() {
-    if( mouseButton === LEFT ) {
-        if( !isSolutionFull()) {
-            let pos = getCell();
-            posClicked = pos;
-            
+    if( mouseButton === LEFT && isClickInField() && !isSolutionFull()) 
+    {
+        let pos = getCell();
+        posClicked = pos;
+        
+        if( isByteExists( pos )) 
+        {
             fillSolution( getByte());
             drawSolutionArray();
+            removeByteFromField( pos );
+            fillGrid();
             dbg( pos[0] + ', ' + pos[1] + ': ' + getByte() + ' == ' + solution );
+
         }
     }
 
