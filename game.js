@@ -1,5 +1,6 @@
 const SELECT_ROWS = 0;
 const SELECT_COLS = 1;
+const GAME_FINISH = 2;
 
 let width = 400, 
     height = 400,
@@ -7,11 +8,14 @@ let width = 400,
     fieldRows = 6,
     gameArray = [],
     canvas,
-    posClicked,
+    posClicked = [],
     stateSelected = SELECT_ROWS,
     solutionNum = 1,
     solutionLength = 5,
-    solution = [];
+    solution = [],
+    activeRow = 0,
+    activeCol = 0,
+    startState = SELECT_ROWS;
 
 class BytesGame {
     constructor() {
@@ -52,16 +56,19 @@ function clearGrid() {
 function setup() {
     canvas = createCanvas( innerWidth - 50, innerHeight - 50 );
     
+    newGame();
+
+    document.addEventListener( 'contextmenu', event => event.preventDefault());
+}
+
+function newGame() {
     var game = new BytesGame();
 
     drawGrid();
     drawSolutionRow();
     fillGrid();
 
-
     dbg( 'game ready' );
-
-    document.addEventListener( 'contextmenu', event => event.preventDefault());
 }
 
 function isSolutionFull() {
@@ -80,6 +87,14 @@ function getCell() {
     if( col > fieldCols - 1 ) 
     {
         col = fieldCols - 1;
+    }
+
+    if( stateSelected == SELECT_ROWS ) {
+        row = activeRow;
+    }
+
+    if( stateSelected == SELECT_COLS ) {
+        col = activeCol;
     }
 
     return [col, row];
@@ -131,7 +146,7 @@ function drawRow() {
     let pos = getCell();
 
     for( var i = 0; i < fieldCols; i ++ ) {
-        drawCell( i, pos[1] );
+        drawCell( i, activeRow );
     }
 }
 
@@ -139,7 +154,7 @@ function drawCol() {
     let pos = getCell();
 
     for( var j = 0; j < fieldRows; j ++ ) {
-        drawCell( pos[0], j );
+        drawCell( activeCol, j );
     }
 }
 
@@ -164,16 +179,27 @@ function drawGame() {
     drawSolutionRow();
     drawActiveCell();
 
+    if( startState == SELECT_ROWS ) {
+        
+    }
+
     if( stateSelected == SELECT_ROWS ) {
-        drawRow();
+        drawRow( activeRow );
     }
     else if( stateSelected == SELECT_COLS ) {
-        drawCol();
+        drawCol( activeCol );
     }
 }
 
 function mouseMoved() {
-    drawGame();
+    if( stateSelected != GAME_FINISH )
+    {
+        drawGame();
+    }
+    else
+    {
+        console.log( 'GAME FINISH' );
+    }
 }
 
 function fillSolution( solutionByte ) {
@@ -181,7 +207,6 @@ function fillSolution( solutionByte ) {
 }
 
 function drawSolutionArray() {
-    
     var elems = document.querySelectorAll( '.solutionCell' );
     
     elems.forEach( function( elem ) { elem.remove();});
@@ -209,32 +234,56 @@ function isByteExists( pos ) {
 }
 
 function mousePressed() {
-    if( mouseButton === LEFT && isClickInField() && !isSolutionFull()) 
+    if( mouseButton === LEFT && isClickInField()) 
     {
-        let pos = getCell();
-        posClicked = pos;
-        
-        if( isByteExists( pos )) 
+        if( !isSolutionFull())
         {
-            fillSolution( getByte());
-            drawSolutionArray();
-            removeByteFromField( pos );
-            fillGrid();
-            dbg( pos[0] + ', ' + pos[1] + ': ' + getByte() + ' == ' + solution );
+            let pos = getCell();
+            posClicked = pos;
+            
+            if( isByteExists( pos )) 
+            {
+                fillSolution( getByte());
+                drawSolutionArray();
+                removeByteFromField( pos );
+                fillGrid();
+                dbg( pos[0] + ', ' + pos[1] + ': ' + getByte() + ' == ' + solution );
 
+                activeRow = posClicked[1];
+                activeCol = posClicked[0];
+
+                if( stateSelected == SELECT_ROWS ) {
+                    stateSelected = SELECT_COLS;
+                }
+                else {
+                    stateSelected = SELECT_ROWS;
+                }
+
+                dbg( 'activeCol ' + activeCol + ', activeRow ' + activeRow );
+            }
+        }
+        
+        if( isSolutionFull())
+        {
+            stateSelected = GAME_FINISH;
+
+            clear();
+
+            drawGrid();
+            drawSolutionRow();
         }
     }
 
-    if( mouseButton === RIGHT ) {
-        if( stateSelected == SELECT_ROWS ) {
-            stateSelected = SELECT_COLS;
-        }
-        else {
-            stateSelected = SELECT_ROWS;
-        }
+    // if( mouseButton === RIGHT ) {
+    //     if( stateSelected == SELECT_ROWS ) {
+    //         stateSelected = SELECT_COLS;
+    //     }
+    //     else {
+    //         stateSelected = SELECT_ROWS;
+    //     }
 
-        dbg( 'right click' );
-    }
+    //     dbg( 'right click' );
+    // }
 
     //drawGame();
 }
