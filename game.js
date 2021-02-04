@@ -10,12 +10,13 @@ let width = 400,
     canvas,
     posClicked = [],
     stateSelected = SELECT_ROWS,
+    startState = SELECT_ROWS,
     solutionNum = 1,
     solutionLength = 5,
     solution = [],
     activeRow = 0,
     activeCol = 0,
-    startState = SELECT_ROWS;
+    chain = [];
 
 class BytesGame {
     constructor() {
@@ -65,8 +66,13 @@ function newGame() {
     var game = new BytesGame();
 
     drawGrid();
-    drawSolutionRow();
     fillGrid();
+    
+    drawSolutionRow();
+    
+    generateChain();
+    drawChainRow();
+    fillChainRow();
 
     dbg( 'game ready' );
 }
@@ -124,6 +130,20 @@ function drawSolutionRow() {
     drawVLines( 500, 10, solutionNum, solutionLength );
 }
 
+function drawChainRow() {
+    drawHLines( 500, 110, 1, chain.length );
+    drawVLines( 500, 110, 1, chain.length );
+}
+
+function fillChainRow() {
+    for( var i = 0; i < chain.length; i++ ) {
+        let text = createP( chain[i] );
+            
+        text.class( 'chainCell' );
+        text.position( 500 + i * 50 + 15, 110 );
+    }
+}
+
 function drawCell( row, col ) {
     //fill( 255, 255, 255 );
     noFill();
@@ -179,6 +199,8 @@ function drawGame() {
     drawSolutionRow();
     drawActiveCell();
 
+    drawChainRow();
+
     if( startState == SELECT_ROWS ) {
         
     }
@@ -201,6 +223,38 @@ function mouseMoved() {
         console.log( 'GAME FINISH' );
     }
 }
+
+function getRandomVal( max, current ) {
+    var num = parseInt( Math.random() * max );
+
+    if( num == current ) {
+        num = getRandomVal( max, current );
+    }
+
+    return num;
+}
+
+function generateChain() {
+    row = 0;
+    col = getRandomVal( fieldCols, -1 );
+    lineSelector = SELECT_COLS;
+
+    for( var i = 0; i < solutionLength; i++ )
+    {
+        if( lineSelector == SELECT_COLS ) 
+        {
+            lineSelector = SELECT_ROWS;
+            col = getRandomVal( fieldCols, col );
+        }
+        else
+        {
+            lineSelector = SELECT_COLS;
+            row = getRandomVal( fieldRows, row );
+        }
+
+        chain.push( gameArray[col][row] );
+    }
+}   
 
 function fillSolution( solutionByte ) {
     solution.push( solutionByte );
@@ -271,6 +325,8 @@ function mousePressed() {
 
             drawGrid();
             drawSolutionRow();
+
+            drawChainRow();
         }
     }
 

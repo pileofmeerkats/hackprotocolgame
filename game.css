@@ -4,7 +4,9 @@ html, body {
 	margin: 0;
 }
 
-.cell, .solutionCell {
+.cell, 
+.solutionCell, 
+.chainCell {
 	color: #333333;
     font-weight: bold;
     user-select: none;
